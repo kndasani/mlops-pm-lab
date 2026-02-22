@@ -113,33 +113,34 @@ if not st.session_state.search_executed:
 else:
     # --- RESULTS MODE (The "SERP" Screen) ---
     st.markdown("<div class='compact-header'>💡 Strategy Mentor</div>", unsafe_allow_html=True)
-    
+
     # Compact inputs at the top
-    c1, c2, c3 = st.columns([3, 2, 1])
+    c1, c2 = st.columns([3, 2])
     with c1:
         new_query = st.text_input("", value=st.session_state.last_query, key="q_res")
     with c2:
         new_role = st.text_input("", value=st.session_state.last_role, key="r_res")
-    with c3:
-        if st.button("Search"):
-            st.session_state.last_query = new_query
-            st.session_state.last_role = new_role
-            st.rerun()
+    if st.button("Search"):
+        st.session_state.last_query = new_query
+        st.session_state.last_role = new_role
+        st.rerun()
 
     st.divider()
 
     # The Answer Section
-    with st.spinner("Analyzing knowledge base..."):
+    answer_placeholder = st.empty()
+    with st.spinner("Analyzing knowledge base and generating answer..."):
         answer = ask_tutor(st.session_state.last_query, role=st.session_state.last_role)
-    
     if answer:
-        st.markdown(f"""
+        answer_placeholder.markdown(f"""
             <div class="result-container">
                 <span style="color: #1a73e8; font-weight: bold;">Tailored Perspective: {st.session_state.last_role}</span>
                 <p style="margin-top: 15px; color: #3c4043;">{answer}</p>
             </div>
         """, unsafe_allow_html=True)
-    
+    else:
+        answer_placeholder.markdown("<div class='result-container'><em>No answer found.</em></div>", unsafe_allow_html=True)
+
     st.write("")
     if st.button("← New Search"):
         st.session_state.search_executed = False

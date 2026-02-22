@@ -26,6 +26,9 @@ Question: {question}
 
 Answer for a {role} perspective:"""
 
+import streamlit as st
+
+@st.cache_data(show_spinner=False)
 def ask_tutor(question, role="Product Manager"):
     # 1. Setup DB and Embeddings
     embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
