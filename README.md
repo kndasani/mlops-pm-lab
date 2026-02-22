@@ -9,12 +9,12 @@ A professional RAG (Retrieval-Augmented Generation) application that translates 
 * Privacy by Design: Interacts with users without requiring personal data like names, focusing strictly on professional roles.
 
 ## Tech Stack
-* Core: Python 3.13, Google Gemini 1.5 (LLM), Google Generative AI Embeddings.
+* Core: Python 3.13, Google Gemini 2.5 (LLM), Google Generative AI Embeddings.
 * Vector Database: ChromaDB for semantic search and document storage.
 * Frontend: Streamlit with custom CSS for dynamic UI states and professional dark-mode chips.
 
 ## Setup
-1. Clone the repo: git clone [your-repo-link]
+1. Clone the repo: git clone https://github.com/kndasani/mlops-pm-lab
 2. Install dependencies: pip install -r requirements.txt
 3. Add your PDFs to the data/ folder.
 4. Run ingestion: python app/ingest.py
