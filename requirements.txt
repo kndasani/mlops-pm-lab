@@ -8,3 +8,10 @@ pypdf
 chromadb
 sentence-transformers
 cryptography
+
+# Web server and data validation needed for Model Context Protocol
+fastapi
+uvicorn[standard]
+pydantic
+requests
+python-multipart

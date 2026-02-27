@@ -26,38 +26,58 @@ Question: {question}
 
 Answer for a {role} perspective:"""
 
-import streamlit as st
 
-@st.cache_data(show_spinner=False)
-def ask_tutor(question, role="Product Manager"):
-    # 1. Setup DB and Embeddings
+# NOTE: the `ask_tutor` wrapper is now just a thin convenience over
+# `generate_answer` and exists so that the old Streamlit UI can keep using
+# the same function signature.  The heavier work is done by
+# `generate_answer` which is protocol‑agnostic and can be reused by our new
+# MCP server.
+
+def _retrieve_context(question: str, k: int = 3) -> str:
+    """Return the top *k* chunks as a single string separated by delimiters.
+    The MCP server and the old UI both rely on this helper under the hood.
+    """
     embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
     db = Chroma(persist_directory=CHROMA_PATH, embedding_function=embeddings)
-    
-    # 2. Retrieve top 3 chunks
-    results = db.similarity_search(question, k=3)
-    context_text = "\n\n---\n\n".join([doc.page_content for doc in results])
-    
-    # 3. Build the Persona-based Prompt
+
+    results = db.similarity_search(question, k=k)
+    return "\n\n---\n\n".join([doc.page_content for doc in results])
+
+
+def generate_answer(question: str, role: str = "Product Manager") -> str:
+    """Core logic for querying the vector store and calling the LLM.
+
+    This function can be used by the Streamlit UI (via ``ask_tutor``) or by
+    any external caller (e.g. our MCP server).
+    """
+
+    context_text = _retrieve_context(question)
+
     prompt_template = ChatPromptTemplate.from_template(PROMPT_TEMPLATE)
-    prompt = prompt_template.format(context=context_text, question=question, role=role)
-    
-    # 4. Call the LLM
+    prompt = prompt_template.format(
+        context=context_text, question=question, role=role
+    )
+
     model = ChatGoogleGenerativeAI(
         model="gemini-2.5-flash",
-        temperature=0.7
+        temperature=0.7,
     )
     response = model.invoke(prompt)
-    
     print(f"\n[Tutor Response for {role}]:")
     print(response.content)
-    
     return response.content
+
+
+# keep the old helper for backwards compatibility with Streamlit
+
+def ask_tutor(question, role="Product Manager"):
+    return generate_answer(question, role=role)
+
 
 if __name__ == "__main__":
     # Example question
     user_query = "What is the importance of storage for GenAI?"
-    ask_tutor(user_query, role="Marketing Executive")
+    print(generate_answer(user_query, role="Marketing Executive"))
 
 def get_knowledge_inventory():
     """Returns a list of unique source filenames present in the vector store."""

@@ -19,3 +19,49 @@ A professional RAG (Retrieval-Augmented Generation) application that translates 
 3. Add your PDFs to the data/ folder.
 4. Run ingestion: python app/ingest.py
 5. Launch the app: streamlit run app/main_ui.py
+
+## Model Context Protocol (MCP) Server 🚀
+
+The project now includes a lightweight **MCP-compliant server** that separates
+context retrieval from client logic.  Instead of embedding LangChain calls
+ directly in the Streamlit UI, the new `app/mcp_server.py` exposes a set of
+REST endpoints under `/mcp/v1/*`.  Any application (a chatbot, CLI, or another
+service) can query the same knowledge base via HTTP, making the system more
+modular and easier to scale.
+
+### Why MCP?
+
+* **Decoupling** – Clients don’t need to know how documents are chunked,
+  embedded or stored; they simply request relevant context or ask for an
+  answer.  This reduces duplication across multiple consumers.
+* **Reusability** – The server can be deployed separately (even in a container)
+  and serve many different frontends.  The old Streamlit UI becomes just one
+  client of the MCP service.
+* **Standardization** – MCP is an open protocol (think similar to OIDC for
+  identity) that defines how LLMs and context providers communicate.  Adopting
+  it prepares the codebase for integration with third‑party agents and
+  orchestration frameworks that already understand the protocol.
+* **Observability & Scaling** – A standalone server can be monitored,
+  replicated, or replaced without touching UI code.  It also allows caching,
+  rate‑limiting, and versioning of the context layer separately.
+
+### Running the MCP Server
+
+After adding your data and building the vector store (steps 1–4 above):
+
+```bash
+pip install -r requirements.txt   # includes fastapi & uvicorn
+uvicorn app.mcp_server:app --reload  # starts the MCP HTTP service
+```
+
+Endpoints include:
+
+* `POST /mcp/v1/contexts/search` – semantic search for context chunks
+* `POST /mcp/v1/ask` – ask a question and receive an LLM-generated answer
+* `GET /mcp/v1/topics` – list of high-level topics for UI badges
+* `GET /mcp/v1/sources` – inventory of source documents
+* `POST /mcp/v1/ingest` – re-run ingestion and rebuild the vector store
+* `GET /mcp/v1/health` – simple health check
+
+The Streamlit app is unchanged but can now be refactored later to hit these
+endpoints instead of running LangChain locally.

@@ -1,7 +1,16 @@
 import os
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_chroma import Chroma
-from ingest import load_and_chunk_documents
+
+# when the app is imported as a package, use the full package path; when run
+# directly as a script (during development) Python adds the containing directory
+# to sys.path, so the bare import still works.
+try:
+    # preferred for MCP server or any packaged usage
+    from app.ingest import load_and_chunk_documents
+except ImportError:
+    # fallback for direct execution (`python app/vector_store.py`)
+    from ingest import load_and_chunk_documents
 
 # This is where the "Database" will be stored on your hard drive
 CHROMA_PATH = "chroma_db"

@@ -1,8 +1,41 @@
 import streamlit as st
 from tutor import ask_tutor, get_knowledge_topics
 from dotenv import load_dotenv
+import os
+import requests
 
 load_dotenv()
+
+# Helper wrappers to hit the MCP server when the environment variable is set
+MCP_URL = os.getenv("MCP_SERVER_URL")
+
+def _remote_request(path: str, payload: dict):
+    url = MCP_URL.rstrip("/") + path
+    try:
+        resp = requests.post(url, json=payload, timeout=10)
+        resp.raise_for_status()
+        return resp.json()
+    except Exception as e:
+        st.error(f"MCP request failed: {e}")
+        return None
+
+
+def ask_tutor(question, role="Product Manager"):
+    # if an MCP server is configured, delegate to it instead of running local code
+    if MCP_URL:
+        data = _remote_request("/mcp/v1/ask", {"question": question, "role": role})
+        return data.get("answer") if data else None
+    # fallback to original in-process implementation
+    from tutor import generate_answer
+    return generate_answer(question, role=role)
+
+
+def get_knowledge_topics():
+    if MCP_URL:
+        data = _remote_request("/mcp/v1/topics", {})
+        return data.get("topics") if data else []
+    from tutor import get_knowledge_topics as _local_topics
+    return _local_topics()
 
 st.set_page_config(page_title="Strategy Mentor", page_icon="🔍", layout="centered")
 
