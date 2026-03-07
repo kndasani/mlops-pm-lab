@@ -4,14 +4,11 @@ langchain-community
 langchain-text-splitters
 langchain-chroma
 langchain-huggingface
-pypdf
-chromadb
-sentence-transformers
-cryptography
+langchain-google-genai
 
-# Web server and data validation needed for Model Context Protocol
-fastapi
 uvicorn[standard]
 pydantic
 requests
 python-multipart
+streamlit
+python-dotenv
